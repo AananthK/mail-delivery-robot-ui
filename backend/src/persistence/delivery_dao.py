@@ -6,20 +6,16 @@ from .db_connection import get_connection
 
 from typing import Optional
 
-def create_delivery(admin_id: int, 
+def create_delivery_dao(admin_id: int, 
                     recipient_id: int,
                     room_number: str,
                     delivery_time: datetime,
                     sender_name: str, 
                     sender_address: str, 
                     sender_email: str,
+                    delivery_status: str,
                     sender_phone: Optional[str]=None,
-                    assigned_robot: Optional[int]=None):
-    
-    if assigned_robot is not None:
-        delivery_status='ready'
-    else:
-        delivery_status='no_robot'
+                    assigned_robot: Optional[int]=None,):
 
     sql = """INSERT INTO delivery (admin_user_id, 
                                     sender_name, 
@@ -49,8 +45,8 @@ def create_delivery(admin_id: int,
     with get_connection() as conn:
         with conn.cursor() as cur: # cursor: required to execute sql statements
             cur.execute(sql, attribute_tuple)
-            record = cur.fetchone()
+            record = cur.fetchone() # fetches resulting row from delivery creation at a dict
         conn.commit() # if connection and insertion is successfull, commit changes
 
-    return record
+    return record # returns row as a dict
 
