@@ -1,4 +1,4 @@
-from models.delivery import Delivery, DeliveryCreateRequest, DeliveryAddress, DeliveryUpdateRequest, DeliveryView
+from models.delivery import Delivery, DeliveryCreateRequest, DeliveryUpdateRequest, DeliveryView
 from persistence.delivery_dao import create_delivery_dao
 from datetime import datetime
 
@@ -33,7 +33,9 @@ def create_delivery(ad_id: int,
     
     dView = DeliveryView(delivery_id = new_delivery['delivery_id'], 
                          status = new_delivery['status'], 
+                         delivery_time = new_delivery['delivery_time'],
                          created_at = new_delivery['created_at'], 
+                         last_updated_at= new_delivery['last_updated_at'],
                          completed_at=None)
     
     return dView
