@@ -1,24 +1,22 @@
-from fastapi import FastAPI
-from models.delivery import DeliveryCreateRequest, DeliveryView
-from services.delivery_service import create_delivery
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from models.delivery import DeliveryCreateRequest, DeliveryQuickView
+from api.routers.delivery_api import router as deliveries_router
 
 app = FastAPI()
 
-# POST method to create deliveries using pydantic model (DeliveryCreateRequest)
-@app.post("/deliveries")
-def create_delivery_endpoint(new_delivery_json: DeliveryCreateRequest):
-    
-    # call create_delivery method from services layer
-    created_delivery = create_delivery(
-        ad_id = new_delivery_json.admin_id,
-        rec_id = new_delivery_json.recipient_id,
-        room = new_delivery_json.room_number,
-        del_time = new_delivery_json.delivery_time,
-        s_name = new_delivery_json.sender_name,
-        s_address = new_delivery_json.sender_address,
-        s_email = new_delivery_json.sender_email,
-        s_phone = new_delivery_json.sender_phone,
-        robot = new_delivery_json.assigned_robot
-    )
+@app.get("/")
+def root():
+    return {"Message": "Main Program"}
 
-    return created_delivery # DeliveryView object returned after this API call
+app.include_router(deliveries_router, prefix = "/deliveries")
+
+# Handles LookupErrors: single-record queries that return no data
+@app.exception_handler(LookupError)
+async def lookup_error_handler(request: Request, exc: LookupError):
+    return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+# Handles ValueErrors: Ex. entering an integer id that is >=0
+@app.exception_handler(ValueError)
+async def value_error_handler(request: Request, exc: ValueError):
+    return JSONResponse(status_code=400, content={"detail": str(exc)})

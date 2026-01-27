@@ -54,7 +54,7 @@ def create_delivery_dao(admin_id: int,
 
 #----- READ -----
 # persistence method to get all deliveries: mainly for internal use
-def get_all_deliveries():
+def get_all_deliveries_dao():
     with get_connection() as conn:
         with conn.cursor() as cur: 
             cur.execute("SELECT * FROM delivery")
@@ -62,7 +62,7 @@ def get_all_deliveries():
     return deliveries
 
 # persistence method to get a delivery by ID; delivery_id is unique, should return one delivery
-def get_delivery_by_id(delivery_id: int):
+def get_delivery_by_id_dao(delivery_id: int):
     sql = "SELECT * FROM delivery WHERE delivery_id = %s"
 
     with get_connection() as conn:
@@ -73,8 +73,8 @@ def get_delivery_by_id(delivery_id: int):
     return record 
 
 # persistence method to get a deliveries by admin; useful for admin dashboard
-def get_delivery_by_admin(admin_id: int):
-    sql = "SELECT * FROM delivery WHERE admin_id = %s"
+def get_delivery_by_admin_dao(admin_id: int):
+    sql = "SELECT * FROM delivery WHERE admin_user_id = %s"
 
     with get_connection() as conn:
         with conn.cursor() as cur: 
@@ -84,8 +84,8 @@ def get_delivery_by_admin(admin_id: int):
     return record
 
 # persistence method to get deliveries to recipient; useful for recipient dashboard
-def get_delivery_by_recipient(recipient_id: int):
-    sql = "SELECT * FROM delivery WHERE recipient_id = %s"
+def get_delivery_by_recipient_dao(recipient_id: int):
+    sql = "SELECT * FROM delivery WHERE recipient_user_id = %s"
 
     with get_connection() as conn:
         with conn.cursor() as cur: 
@@ -95,7 +95,7 @@ def get_delivery_by_recipient(recipient_id: int):
     return record
 
 # persistence method to get deliveries from sender; useful for dashboard filtering
-def get_delivery_by_sender(sender_name: str):
+def get_delivery_by_sender_dao(sender_name: str):
     sql = "SELECT * FROM delivery WHERE sender_name = %s"
 
     with get_connection() as conn:
@@ -106,7 +106,7 @@ def get_delivery_by_sender(sender_name: str):
     return record
 
 # persistence method to get deliveries by date; useful for dashboard sorting
-def get_delivery_by_date(date: datetime):
+def get_delivery_by_date_dao(date: datetime):
     sql = "SELECT * FROM delivery WHERE delivery_time = %s ORDER BY delivery_time DESC"
 
     with get_connection() as conn:
@@ -117,38 +117,50 @@ def get_delivery_by_date(date: datetime):
     return record
 
 #----- UPADTE -----
+# persistence method to update room_number, status, or/and delivery_time of a single delivery
+def update_delivery_dao(delivery_id: int, 
+                        room_number: Optional[str] = None,
+                        delivery_time: Optional[datetime] = None,
+                        status: Optional[str] = None
+                        ):
+    
+    set_clauses: list[str] = [] # list of attributes that are being updated
+    values: list[object] = [] # list of inputted new values per attribute (in order as set_clauses)
+    
+    if room_number is not None:
+        set_clauses.append("room_number = %s")
+        values.append(room_number)
 
-# persistence method to update status of a single delivery
-def update_delivery_status_dao(delivery_id: int, status: str):
-    sql = """UPDATE delivery
-             SET last_updated_at = NOW(), status = %s 
+    if delivery_time is not None:
+        set_clauses.append("delivery_time = %s")
+        values.append(delivery_time)
+
+    if status is not None:
+        set_clauses.append("status = %s")
+        values.append(status)
+
+    set_clauses.append("last_updated_at = NOW()")
+
+    set_sql = ", ".join(set_clauses) # attributes of SET statement, seperated by commas
+
+    sql = f"""UPDATE delivery
+             SET {set_sql}
              WHERE delivery_id = %s
-             RETURNING delivery_id, admin_user_id, status, created_at, last_updated_at, delivery_time
+             RETURNING delivery_id, admin_user_id, status, room_number, created_at, last_updated_at, delivery_time
           """
+    
+    values.append(delivery_id)
+
     with get_connection() as conn:
         with conn.cursor() as cur: 
-            cur.execute(sql, (status, delivery_id))
+            cur.execute(sql, tuple(values))
             record = cur.fetchone()
         conn.commit()
 
     return record
 
-# persistence method to update delivery_time of a single delivery
-#   - this method may also affect status, but that is handled in service layer
-def update_delivery_time_dao(delivery_id: int, time: datetime):
-    sql = """UPDATE delivery
-             SET last_updated_at = NOW(), delivery_time = %s 
-             WHERE delivery_id = %s
-             RETURNING delivery_id, admin_user_id, status, created_at, last_updated_at, delivery_time
-          """
-    with get_connection() as conn:
-        with conn.cursor() as cur: 
-            cur.execute(sql, (time, delivery_id))
-            record = cur.fetchone()
-        conn.commit()
-
-    return record
-
+#----- DELETE -----
+# persistence method to delete a delivery with delivery_id; only by admin
 def delete_delivery_dao(delivery_id):
     sql = """DELETE FROM delivery WHERE delivery_id = %s
              RETURNING delivery_id, admin_user_id, status, created_at, last_updated_at, delivery_time
