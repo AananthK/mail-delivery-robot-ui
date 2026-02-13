@@ -67,29 +67,34 @@ def get_account_by_id_dao(id: int):
             accounts = cur.fetchone()
     return accounts
 
-# persistence method to check login credentials
-def get_account_login_dao(username: str, password_hash):
+# persistence method to get user by username
+def get_account_by_username_dao(username: str):
 
-    sql = "SELECT user_id FROM account WHERE username = %s AND password_hash = %s"
+    sql = "SELECT user_id, username, password_hash, first_name, last_name, user_role, email, phone_number" \
+         " FROM account WHERE username = %s"
     
     with get_connection() as conn:
         with conn.cursor() as cur: 
-            cur.execute(sql, (username, password_hash))
-            accounts = cur.fetchone()
-    return accounts
+            cur.execute(sql, (username,))
+            account = cur.fetchone()
+    return account
 
 # persistence function to get a user using name 
-# *Suggestion: make names in DB fully uppercase/lowercase to avoid case sensitivity in query
-def get_account_by_name_dao(name: str):
-    sql = "SELECT user_id, username, first_name, last_name, user_role, email, phone_number " \
-          "FROM account " \
-          "WHERE first_name = %s OR last_name = %s"
-    
+def search_accounts_by_name_dao(term: str):
+    sql = """
+        SELECT user_id, username, first_name, last_name, user_role, email, phone_number
+        FROM account
+        WHERE first_name ILIKE %s OR last_name ILIKE %s
+        ORDER BY last_name, first_name
+    """
+    # ILIKE in SQL is used for case-insensitive pattern matching
+    # no need to worry about capitalization in name search
+
+    pattern = f"%{term}%"
     with get_connection() as conn:
-        with conn.cursor() as cur: 
-            cur.execute(sql, (name, name))
-            accounts = cur.fetchall()
-    return accounts
+        with conn.cursor() as cur:
+            cur.execute(sql, (pattern, pattern))
+            return cur.fetchall()
 
 #----- UPDATE -----
 # persistence function to update account contact information

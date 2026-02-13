@@ -10,7 +10,8 @@ from typing import Literal
 # input values when user creates an account
 class UserCreate(BaseModel):
     username: str
-    password: str
+    password: str = Field(min_length = 8, max_length = 128)
+    # when creating a user, password must be minimum 8 characters, and max 128
     first_name: str
     last_name: str
     role: str
@@ -37,16 +38,21 @@ class LoginRequest(BaseModel):
 #***** ouput models: return information (what the client sees) *****
 
 # output values when user logs in
-class UserDashboardView(BaseModel):
+class LoginResponse(BaseModel):
+    # important attributes for frontend behaviour
+    user_id: int
+    user_role: Literal["admin", "user"]
     # immediate display on dashboard
     first_name: str
     last_name: str
     # personal information, visible from account overview
+    username: str
     email: EmailStr
     phone_number: Optional[str] = None
 
 # output values that are visible to admins
 class UserContactView(BaseModel):
+    user_id: int
     username: str
     first_name: str
     last_name: str
