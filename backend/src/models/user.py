@@ -56,6 +56,6 @@ class UserContactView(BaseModel):
     username: str
     first_name: str
     last_name: str
-    role: Literal["admin", "user"]
+    user_role: Literal["admin", "user"]
     email: EmailStr
     phone_number: Optional[str] = None

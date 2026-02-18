@@ -19,7 +19,7 @@ def account_to_user_contact_view(account: dict):
                            username = account['username'],
                            first_name = account['first_name'],
                            last_name = account['last_name'],
-                           role = account['user_role'],
+                           user_role = account['user_role'],
                            email = account['email'],
                            phone_number = account['phone_number'])
 
@@ -39,7 +39,7 @@ def create_user( admin_id: int,
         raise PermissionError("Only Admins can create users")
     
     # check to see if username is unique
-    if (not get_account_by_username_dao(uname)):
+    if (get_account_by_username_dao(uname)):
         raise ValueError(f"Account, {uname} already exists")
     
     account = create_account_dao(username = uname,

@@ -25,7 +25,7 @@ def create_account_dao(username: str,
                                     phone_number 
                                     ) 
              VALUES (%s, %s, %s, %s, %s, %s, %s)
-             RETURNING user_id, username, first_name, last_name
+             RETURNING user_id, username, first_name, last_name, user_role, email, phone_number
             """
     # to order attributes for delivery table insertion
     attribute_tuple = (username, 

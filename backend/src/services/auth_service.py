@@ -9,7 +9,7 @@ def user_login(username:str, password:str):
     
     account = get_account_by_username_dao(username = username)
 
-    if not account or verify_password(password, account['password_hash']):
+    if not account or not verify_password(password, account['password_hash']):
         raise ValueError("Invalid login credentials")
 
     verified_user = LoginResponse(user_id = account['user_id'],
