@@ -1,15 +1,16 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from models.delivery import DeliveryCreateRequest, DeliveryQuickView
 from api.routers.delivery_api import router as deliveries_router
+from api.routers.robot_api import router as robot_router
 
 app = FastAPI()
 
-@app.get("/")
-def root():
-    return {"Message": "Main Program"}
+# GET /health to confirm API is reachable by robot
+@app.get("/health")
+def health():
+    return {"status": "running"}
 
-app.include_router(deliveries_router, prefix = "/deliveries")
+app.include_router(robot_router, prefix = "/robot")
 
 # Handles LookupErrors: single-record queries that return no data
 @app.exception_handler(LookupError)
