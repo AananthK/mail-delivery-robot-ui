@@ -1,7 +1,7 @@
 import streamlit as st
 import demo.app_bootstrap
 
-from backend.src.services.account_service import admin_view_deliveries
+from backend.src.services.admin_service import admin_view_deliveries
 
 # Admin guard
 if not st.session_state.get("is_logged_in") or st.session_state.get("role") != "admin":

@@ -1,14 +1,14 @@
 import streamlit as st
-import demo.app_bootstrap
+import app_bootstrap
 
 from backend.src.services.admin_service import create_user
 
 # Admin guard
 if not st.session_state.get("is_logged_in") or st.session_state.get("role") != "admin":
     st.error("Admin access only. Please log in.")
-    st.switch_page("streamlit_app.py")
+    st.page_link("login.py", label="Go to Login")
+    st.stop()
 
-st.set_page_config(page_title="Create User", layout="wide")
 st.title("➕ Create User")
 
 with st.form("create_user_form"):
@@ -23,11 +23,11 @@ with st.form("create_user_form"):
 
 if submitted:
     if not username or not password or not first_name or not last_name or not email:
-        st.warning("Please fill in username, password, first/last name, and email.")
+        st.warning("Please fill in username, password, first name, last name, and email.")
     else:
         try:
             result = create_user(
-                admin_id = st.session_state.get("user_id"),
+                admin_id=st.session_state.get("user_id"),
                 uname=username,
                 pword=password,
                 fname=first_name,
@@ -35,8 +35,9 @@ if submitted:
                 e_mail=email,
                 p_number=phone_number if phone_number else None
             )
+
             st.success("User created successfully!")
-            # result might be dict or model:
+
             if hasattr(result, "model_dump"):
                 st.json(result.model_dump())
             elif isinstance(result, dict):
@@ -48,5 +49,8 @@ if submitted:
             st.error(str(e))
 
 st.divider()
-if st.button("⬅️ Back to Dashboard"):
-    st.switch_page("pages/1_Admin_Dashboard.py")
+st.page_link(
+    "admin/admin_user_mgmt.py",
+    label="⬅️ Back to Admin User Management",
+    use_container_width=False
+)

@@ -1,46 +1,78 @@
 import streamlit as st
-import demo.app_bootstrap
+import app_bootstrap
 
-from backend.src.services.auth_service import user_login
+st.set_page_config(
+    page_title="Mail Delivery Robot Demo",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
-st.set_page_config(page_title="Mail Delivery Robot Demo", layout="wide")
-st.title("Mail Robot Delivery Demo")
-st.subheader("Login")
+# ---------- Public pages ----------
+login_page = st.Page("login.py", title="Login", default=True)
 
-# If already logged in, route
-# Auto redirect if already logged in
-if st.session_state.get("is_logged_in"):
-    if st.session_state.get("role") == "admin":
-        st.switch_page("pages/1_Admin_Dashboard.py")
-    elif st.session_state.get("role") == "user":
-        st.switch_page("pages/5_User_Dashboard.py")
+# ---------- Admin pages ----------
+admin_dashboard = st.Page("admin/admin_dashboard.py", title="Admin Dashboard", default=True)
+admin_user_mgmt = st.Page("admin/admin_user_mgmt.py", title="User Management")
+admin_robot_mgmt = st.Page("admin/admin_robot_mgmt.py", title="Robot Management")
+admin_delivery_mgmt = st.Page("admin/admin_delivery_mgmt.py", title="Delivery Management")
+admin_account_settings = st.Page("admin/admin_account_settings.py", title="My Account")
 
+# User Management
+admin_create_user = st.Page("admin/user_mgmt_pages/admin_create_user.py", title="Create User")
+admin_view_user = st.Page("admin/user_mgmt_pages/admin_view_user.py", title="View Users")
+admin_edit_user = st.Page("admin/user_mgmt_pages/admin_edit_user.py", title="Edit User")
 
-uname = st.text_input("Username")
-pword = st.text_input("Password", type="password")
+# Delivery Management
+admin_create_delivery = st.Page("admin/delivery_mgmt_pages/admin_create_delivery.py", title="Create Delivery")
+admin_view_delivery = st.Page("admin/delivery_mgmt_pages/admin_view_delivery.py", title="View Deliveries")
+admin_edit_delivery = st.Page("admin/delivery_mgmt_pages/admin_edit_delivery.py", title="Edit Delivery")
 
-if st.button("Login"):
-    if not uname or not pword:
-        st.warning("Please enter both username and password.")
-    else:
-        try:
-            user = user_login(username=uname, password=pword)
+# Robot Management
+admin_view_robot = st.Page("admin/robot_mgmt_pages/admin_view_robot.py", title="View Robots")
 
-            # Store login state
-            st.session_state["is_logged_in"] = True
-            st.session_state["user_id"] = user.user_id
-            st.session_state["role"] = user.user_role
-            st.session_state["first_name"] = user.first_name
-            st.session_state["last_name"] = user.last_name
-            st.session_state["username"] = user.username
-            st.session_state["email"] = user.email
-            st.session_state["phone_number"] = user.phone_number
+# ---------- User pages ----------
+user_dashboard = st.Page("user/user_dashboard.py", title="User Dashboard", default=True)
+user_delivery_mgmt = st.Page("user/user_delivery_mgmt.py", title="My Deliveries")
+user_account_mgmt = st.Page("user/user_account_mgmt.py", title="My Account")
 
-            if user.user_role == "admin":
-                st.switch_page("pages/1_Admin_Dashboard.py")
-            else:
-                st.switch_page("pages/5_User_Dashboard.py")
+# Delivery Management
+user_view_delivery = st.Page("user/delivery_mgmt_pages/user_view_delivery.py", title="View Deliveries")
+user_edit_delivery = st.Page("user/delivery_mgmt_pages/user_edit_delivery.py", title="Edit Delivery")
 
-        except Exception as e:
-            st.error(str(e))
+# ---------- Role-based navigation ----------
+if not st.session_state.get("is_logged_in"):
+    pg = st.navigation(
+        [login_page],
+        position="hidden"
+    )
+elif st.session_state.get("role") == "admin":
+    pg = st.navigation(
+        [
+            admin_dashboard,
+            admin_user_mgmt,
+            admin_robot_mgmt,
+            admin_delivery_mgmt,
+            admin_account_settings,
+            admin_create_user,
+            admin_view_user,
+            admin_edit_user,
+            admin_view_robot,
+            admin_create_delivery,
+            admin_view_delivery,
+            admin_edit_delivery,
+        ],
+        position="hidden"
+    )
+else:
+    pg = st.navigation(
+        [
+            user_dashboard,
+            user_delivery_mgmt,
+            user_account_mgmt,
+            user_view_delivery,
+            user_edit_delivery,
+        ],
+        position="hidden"
+    )
 
+pg.run()

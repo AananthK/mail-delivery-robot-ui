@@ -12,18 +12,22 @@ st.title("🛠️ Admin Dashboard")
 user_id = st.session_state.get("user_id")
 st.caption(f"Logged in as admin (user_id: {user_id})")
 
-c1, c2, c3 = st.columns(3)
+c1, c2, c3, c4 = st.columns(4)
 
 with c1:
-    if st.button("➕ Create User", use_container_width=True):
+    if st.button("👤 User Management", use_container_width=True):
         st.switch_page("pages/2_Create_User.py")
 
 with c2:
-    if st.button("📦 Create Delivery", use_container_width=True):
+    if st.button("📦 Delivery Management", use_container_width=True):
         st.switch_page("pages/3_Create_Delivery.py")
 
 with c3:
-    if st.button("📄 View Deliveries", use_container_width=True):
+    if st.button("🤖 Robot Management", use_container_width=True):
+        st.switch_page("pages/4_View_Deliveries.py")
+
+with c4:
+    if st.button("👨‍💻👩‍💻 My Account", use_container_width=True):
         st.switch_page("pages/4_View_Deliveries.py")
 
 st.divider()

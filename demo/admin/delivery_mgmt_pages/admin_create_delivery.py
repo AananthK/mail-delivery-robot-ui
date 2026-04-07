@@ -1,5 +1,5 @@
 import streamlit as st
-import demo.app_bootstrap
+import app_bootstrap
 
 from datetime import datetime, date, time
 
@@ -11,7 +11,7 @@ if not st.session_state.get("is_logged_in") or st.session_state.get("role") != "
     st.switch_page("streamlit_app.py")
 
 st.set_page_config(page_title="Create Delivery", layout="wide")
-st.title("📦 Create Delivery")
+st.title("📨 Create Deliveryy")
 
 admin_id = st.session_state.get("user_id")
 st.caption(f"Admin ID: {admin_id}")
@@ -36,7 +36,7 @@ with st.form("create_delivery_form"):
     submitted = st.form_submit_button("Create Delivery")
 
 if submitted:
-    # Minimal validation (service layer still validates permissions)
+    
     missing = []
     if not room_number: missing.append("Room Number")
     if not sender_name: missing.append("Sender Name")
@@ -72,5 +72,5 @@ if submitted:
             st.error(str(e))
 
 st.divider()
-if st.button("⬅️ Back to Dashboard"):
-    st.switch_page("pages/1_Admin_Dashboard.py")
+if st.button("⬅️ Back to Admin Delivery Management"):
+    st.switch_page("admin/admin_delivery_mgmt.py")

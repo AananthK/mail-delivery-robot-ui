@@ -1,7 +1,7 @@
 import streamlit as st
 import demo.app_bootstrap
 
-from backend.src.services.delivery_service import get_deliveries_by_recipient
+from backend.src.services.delivery_admin_service import get_deliveries_by_recipient
 
 # User guard
 if not st.session_state.get("is_logged_in") or st.session_state.get("role") != "user":
