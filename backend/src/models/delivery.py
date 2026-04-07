@@ -26,6 +26,11 @@ class DeliveryUpdateRequest(BaseModel):
     status: Optional[str] = None
     delivery_time: Optional[datetime] = None
 
+class DelvieryAssignRobot(BaseModel):
+    admin_id: int
+    delivery_id: int
+    robot_id:int
+
 #internal/domain model: used in backend
 class Delivery:
     def __init__(self, delivery_id, admin_id, status, created_at, last_updated_at, delivery_time=None):
@@ -47,6 +52,7 @@ class DeliveryUpdateView(BaseModel):
     delivery_time: datetime
     created_at: datetime
     last_updated_at: datetime
+    assigned_robot: Optional[int]=None
     completed_at: Optional[datetime]=None
     deleted_at: Optional[datetime]=None # this field will only be used for deletions
 

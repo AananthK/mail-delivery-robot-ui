@@ -18,7 +18,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     phone_number: Optional[str] = None
 
-# input values when user wants to update contact info
+# input/output values when user wants to update contact info
 class UserUpdateContactInfo(BaseModel):    
     # modifiable contact info
     email: Optional[EmailStr] = None
