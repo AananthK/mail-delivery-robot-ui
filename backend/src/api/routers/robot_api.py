@@ -1,10 +1,15 @@
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, HTTPException, Depends
 from models.room import RoomView
 from services.robot_service import *
 from services.room_service import get_room_by_number
 from services.admin_service import get_robot_by_id
+from services.delivery_recipient_service import get_delivery_pin
 
-router = APIRouter()
+from api.api_security import verify_api_key
+
+router = APIRouter(
+    dependencies=[Depends(verify_api_key)]
+)
 
 #----- Get endpoints -----
 # GET = retrieve a resource
@@ -33,6 +38,20 @@ def next_room_endpoint(robot_id: int):
     robot = get_robot_by_id(robot_id)
 
     return get_room_by_number(robot.next_room)
+
+
+#----- Post endpoints -----
+# POSt = create a resource/change API state
+
+# POSt robot's door command at /robot/{robot_id}/door
+@router.post("/robot/{robot_id}/door")
+# Response from endpoint can be either view depending on query
+def robot_door_endpoint(robot_id: int, delivery_id: int, recipient_id: int, pin: str): 
+
+    if pin == get_delivery_pin(r_id= recipient_id, d_id= delivery_id):
+        return "open"
+    else:
+        return "close"
 
 #----- UPDATE endpoints -----
 # PATCH = modify parts of a resource
