@@ -74,7 +74,7 @@ def update_next_room_endpoint(robot_id: int, update: RobotNextRoomUpdate):
     return update_robot_next_room(robot_id = robot_id, next_room = update.next_room)
 
 # PATCH unlock robot door command at /robot/{robot_id}/door (Used by user)
-@router.patch("/robot/{robot_id}/door")
+@router.patch("/robot/{robot_id}/door/unlock")
 def unlock_robot_door_endpoint(robot_id: int, delivery_id: int, recipient_id: int, pin: str): 
 
     if pin == get_delivery_pin(r_id= recipient_id, d_id= delivery_id):
@@ -83,12 +83,12 @@ def unlock_robot_door_endpoint(robot_id: int, delivery_id: int, recipient_id: in
     return get_robot_door_status(robot_id=robot_id)
 
 # PATCH robot's door command at /robot/{robot_id}/door (Used by robot)
-@router.patch("/robot/{robot_id}/door")
+@router.patch("/robot/{robot_id}/door/lock")
 def lock_robot_door_endpoint(robot_id: int): 
 
     r_door = get_robot_door_status(robot_id=robot_id)
 
     if r_door['door_status'] == 'open':
-        update_robot_door_status(robot_id=robot_id, door_status="closed")
+        update_robot_door_status(robot_id=robot_id, door_status="close")
         
     return r_door
