@@ -48,16 +48,6 @@ def robot_door_endpoint(robot_id: int):
 #----- Post endpoints -----
 # POSt = create a resource/change API state
 
-# POSt robot's door command at /robot/{robot_id}/door
-@router.post("/robot/{robot_id}/door")
-# Response from endpoint can be either view depending on query
-def robot_door_endpoint(robot_id: int, delivery_id: int, recipient_id: int, pin: str): 
-
-    if pin == get_delivery_pin(r_id= recipient_id, d_id= delivery_id):
-        return update_robot_door_status(robot_id=robot_id, door_status="open")
-    else:
-        return update_robot_door_status(robot_id=robot_id, door_status="close")
-
 #----- UPDATE endpoints -----
 # PATCH = modify parts of a resource
 # PUT = replace entire resource
@@ -82,3 +72,23 @@ def update_current_room_endpoint(robot_id: int, update: RobotStatusUpdate):
 def update_next_room_endpoint(robot_id: int, update: RobotNextRoomUpdate): 
 
     return update_robot_next_room(robot_id = robot_id, next_room = update.next_room)
+
+# PATCH unlock robot door command at /robot/{robot_id}/door (Used by user)
+@router.patch("/robot/{robot_id}/door")
+def unlock_robot_door_endpoint(robot_id: int, delivery_id: int, recipient_id: int, pin: str): 
+
+    if pin == get_delivery_pin(r_id= recipient_id, d_id= delivery_id):
+        update_robot_door_status(robot_id=robot_id, door_status="open")
+        
+    return get_robot_door_status(robot_id=robot_id)
+
+# PATCH robot's door command at /robot/{robot_id}/door (Used by robot)
+@router.patch("/robot/{robot_id}/door")
+def lock_robot_door_endpoint(robot_id: int): 
+
+    r_door = get_robot_door_status(robot_id=robot_id)
+
+    if r_door['door_status'] == 'open':
+        update_robot_door_status(robot_id=robot_id, door_status="closed")
+        
+    return r_door
