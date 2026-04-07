@@ -54,6 +54,19 @@ def get_all_accounts_dao():
             accounts = cur.fetchall() # cursor fetches all rows from query
     return accounts
 
+# persistence method to get all recipients (users), except password
+def get_all_recipients_dao():
+
+    sql = "SELECT user_id, username, first_name, last_name, user_role, email, phone_number " \
+          "FROM account " \
+          "WHERE user_role = %s"
+
+    with get_connection() as conn:
+        with conn.cursor() as cur: 
+            cur.execute(sql, ('user',))
+            accounts = cur.fetchall() # cursor fetches all rows from query
+    return accounts
+
 # persistence method to get an account with an id
 def get_account_by_id_dao(id: int):
 
@@ -128,7 +141,7 @@ def update_account_contact_info_dao(user_id: int, email: Optional[str] = None, p
 
     return record
 
-def update_account_password(user_id: int, new_password_hash: str):
+def update_account_password_dao(user_id: int, new_password_hash: str):
     sql = f"""UPDATE account
              SET password_hash = %s
              WHERE user_id = %s
@@ -145,7 +158,7 @@ def update_account_password(user_id: int, new_password_hash: str):
 
 #----- DELETE -----
 # persistence function to delete an account
-def delete_account(user_id):
+def delete_account_dao(user_id):
     sql = """DELETE FROM account WHERE user_id = %s
              RETURNING user_id, username
           """
