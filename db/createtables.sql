@@ -18,7 +18,8 @@ CREATE TABLE robot (
 robot_id SERIAL PRIMARY KEY,
 robot_status VARCHAR(10) NOT NULL CHECK (robot_status IN('off','idle', 'charging', 'moving')),
 current_room VARCHAR(10) REFERENCES room (room_number),
-next_room VARCHAR(10) REFERENCES room (room_number)
+next_room VARCHAR(10) REFERENCES room (room_number),
+door_status VARCHAR(5) NOT NULL DEFAULT 'close' CHECK (door_status IN ('open', 'close'))
 );
 
 CREATE TABLE delivery (

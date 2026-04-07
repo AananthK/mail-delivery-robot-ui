@@ -39,6 +39,11 @@ def next_room_endpoint(robot_id: int):
 
     return get_room_by_number(robot.next_room)
 
+# GET robot's door command at /robot/{robot_id}/door
+@router.get("/robot/{robot_id}/door")
+# Response from endpoint can be either view depending on query
+def robot_door_endpoint(robot_id: int): 
+    return get_robot_door_status(robot_id=robot_id)
 
 #----- Post endpoints -----
 # POSt = create a resource/change API state
@@ -49,9 +54,9 @@ def next_room_endpoint(robot_id: int):
 def robot_door_endpoint(robot_id: int, delivery_id: int, recipient_id: int, pin: str): 
 
     if pin == get_delivery_pin(r_id= recipient_id, d_id= delivery_id):
-        return "open"
+        return update_robot_door_status(robot_id=robot_id, door_status="open")
     else:
-        return "close"
+        return update_robot_door_status(robot_id=robot_id, door_status="close")
 
 #----- UPDATE endpoints -----
 # PATCH = modify parts of a resource

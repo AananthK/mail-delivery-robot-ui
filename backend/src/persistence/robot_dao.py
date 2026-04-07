@@ -77,6 +77,17 @@ def get_robots_by_next_room_dao(next_room: str):
     
     return record
 
+# persistence function to get the door status
+def get_robot_door_dao(robot_id: int):
+    sql = """SELECT robot_id, door_status FROM robot WHERE robot_id = %s"""
+
+    with get_connection() as conn:
+        with conn.cursor() as cur: 
+            cur.execute(sql, (robot_id,))
+            record = cur.fetchone()
+    
+    return record
+
 #----- UPDATE -----
 
 # persistence function to update robot status
@@ -151,7 +162,19 @@ def robot_next_room_null_dao(robot_id: int):
             cur.execute(sql, (robot_id,))
         conn.commit()
 
+# persistence function to update the door status
+def update_robot_door_dao(robot_id: int, door_status: str):
+    sql = f"""UPDATE robot 
+            SET door_status = %s 
+            WHERE robot_id = %s
+            RETURNING robot_id, door_status"""
 
+    with get_connection() as conn:
+        with conn.cursor() as cur: 
+            cur.execute(sql, (door_status, robot_id))
+            record = cur.fetchone()
+    
+    return record
 
 #----- DELETE -----
 

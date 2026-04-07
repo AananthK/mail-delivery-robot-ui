@@ -127,6 +127,17 @@ def get_robots_by_next_room(next_room: str):
     
     return robot_list
 
+# service function to get robot door status
+def get_robot_door_status(robot_id: int):
+    
+    # check if robot exists
+    r = find_robot(robot_id = robot_id)
+
+    rec = get_robot_door_dao(robot_id = robot_id)
+
+    return RobotDoorUpdate(robot_id= rec['robot_id'],
+                           door_status = rec['door_status'])
+
 # service function to update robot status (robot will use this)
 def update_robot_status(robot_id: int, status: str):
 
@@ -186,6 +197,21 @@ def update_robot_next_room(robot_id: int, next_room: str):
                           next_room = r['next_room'])
     
     return updated_robot
+
+
+# service function to update robot door status
+def update_robot_door_status(robot_id: int, door_status: str):
+
+    if door_status not in {'open', 'close'}:
+        raise ValueError("Invalid status: 'open' or 'close' allowed")
+    
+    # check if robot exists
+    r = find_robot(robot_id = robot_id)
+
+    rec = update_robot_door_dao(robot_id = robot_id, door_status = door_status)
+
+    return RobotDoorUpdate(robot_id= rec['robot_id'],
+                           door_status = rec['door_status'])
 
 # service function to delete a robot
 def delete_robot(robot_id: int):

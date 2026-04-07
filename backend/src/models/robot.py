@@ -23,6 +23,9 @@ class RobotFullView(BaseModel):
     current_room: Optional[str] = Field(default = None, max_length = 10)
     next_room: Optional[str] = Field(default = None, max_length = 10)
 
+class RobotDoorUpdate(BaseModel):
+    robot_id: int
+    door_status: Literal["open", "close"]
+
 class RobotDeletedView(BaseModel):
     robot_id: int
-    
