@@ -34,7 +34,8 @@ recipient_user_id INTEGER NOT NULL REFERENCES account (user_id),
 assigned_robot INTEGER REFERENCES robot (robot_id),
 room_number VARCHAR(10) NOT NULL REFERENCES room (room_number),
 delivery_time TIMESTAMPTZ NOT NULL,
-status VARCHAR (20) NOT NULL CHECK (status IN ('no_robot','ready','in_progress','error','unloading','complete'))
+status VARCHAR (20) NOT NULL CHECK (status IN ('no_robot','ready','in_progress','error','unloading','complete','late')),
+pin CHAR(6) NOT NULL DEFAULT LPAD(FLOOR(RANDOM() * 1000000)::TEXT, 6, '0')
 );
 
 CREATE TABLE robot_event_log (
