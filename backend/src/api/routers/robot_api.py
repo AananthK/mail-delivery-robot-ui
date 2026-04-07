@@ -88,7 +88,7 @@ def lock_robot_door_endpoint(robot_id: int):
 
     r_door = get_robot_door_status(robot_id=robot_id)
 
-    if r_door['door_status'] == 'open':
-        update_robot_door_status(robot_id=robot_id, door_status="close")
+    if r_door.door_status == 'open':
+        r_door = update_robot_door_status(robot_id=robot_id, door_status="close")
         
     return r_door
