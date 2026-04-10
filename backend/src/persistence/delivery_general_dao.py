@@ -49,7 +49,7 @@ def get_all_deliveries_by_robot_dao(robot_id: int):
 def get_ready_deliveries_for_robot_dao(robot_id: int):
     sql = "SELECT * FROM delivery " \
             "WHERE assigned_robot = %s " \
-            "AND delivery_time :: DATE = CURRENT_DATE " \
+            "AND (delivery_time AT TIME ZONE 'America/Toronto')::date = (NOW() AT TIME ZONE 'America/Toronto')::date " \
             "AND status = %s " \
             "AND recipient_confirmed = %s " \
             "ORDER BY delivery_time DESC"

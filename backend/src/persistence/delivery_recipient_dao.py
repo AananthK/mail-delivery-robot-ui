@@ -107,7 +107,7 @@ def get_deliveries_by_room_for_recipient_dao(recipient_id: int, room_number: str
 def get_ready_deliveries_for_recipient_dao(recipient_id: int):
     sql = "SELECT * FROM delivery " \
             "WHERE recipient_user_id = %s " \
-            "AND delivery_time :: DATE = CURRENT_DATE " \
+            "AND (delivery_time AT TIME ZONE 'America/Toronto')::date = (NOW() AT TIME ZONE 'America/Toronto')::date " \
             "AND status = %s " \
             "ORDER BY delivery_time DESC"
 
