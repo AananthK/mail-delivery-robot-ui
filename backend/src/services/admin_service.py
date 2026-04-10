@@ -2,6 +2,7 @@
 # This file contains functional methods only executable by authenticated admins
 
 from models.user import UserContactView, UserUpdateContactInfo
+from models.delivery import DeliveryRobotView
 from persistence.account_dao import *
 from services.delivery_admin_service import *
 from services.robot_service import *
@@ -359,26 +360,23 @@ def admin_view_robots_by_next_room(admin_id: int, next_room: str):
     return get_robots_by_next_room(next_room = next_room)
 
 #** 3. Robot Updates
-# service function to assign delivery to a robot
-def admin_assign_robot_next_delivery(admin_id: int, robot_id: int):
+# service function to assign deliveries to a robot
+def admin_assign_robot_deliveries(admin_id: int, robot_id: int):
 
     if not admin_exists(admin_id):
         raise PermissionError("Only Admin can assign delivery to robots")
 
-    delivery = get_ready_deliveries_dao(admin_id)[0] # get first item in the python list
-
-    admin_change_delivery_status(admin_id = admin_id, d_id= delivery['delivery_id'], status = "in_progress")
-
-    update_robot_next_room(robot_id= robot_id, new_next_room = delivery['room_number'])
-
-    dView = DeliveryQuickView(delivery_id = delivery['delivery_id'], 
-                         status = delivery['status'], 
-                         delivery_time = delivery['delivery_time'],
-                         created_at = delivery['created_at'], 
-                         last_updated_at= delivery['last_updated_at'],
-                         completed_at=None)
+    deliveries = get_ready_deliveries_for_admin_dao(admin_id)
+    d_list = []
     
-    return dView
+    for delivery in deliveries:
+        d = DeliveryRobotView(delivery_id = delivery['delivery_id'],
+                              status = delivery['status'],
+                              room_number = delivery['room_number'])
+        
+        d_list.append(d)
+
+    return d_list
 
 #** Robot Deletion
 # service function to delete robot

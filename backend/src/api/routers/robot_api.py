@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Query, HTTPException, Depends
 from models.room import RoomView
 from services.robot_service import *
+from services.robot_delivery_service import *
 from services.room_service import get_room_by_number
 from services.admin_service import get_robot_by_id
 from services.delivery_recipient_service import get_delivery_pin
@@ -8,6 +9,7 @@ from services.delivery_recipient_service import get_delivery_pin
 from api.api_security import verify_api_key
 
 router = APIRouter(
+    tags=["Robot API Endpoints"],
     dependencies=[Depends(verify_api_key)]
 )
 
@@ -38,6 +40,12 @@ def next_room_endpoint(robot_id: int):
     robot = get_robot_by_id(robot_id)
 
     return get_room_by_number(robot.next_room)
+
+# GET robot's deliveries at /robot/{robot_id}/delivery
+@router.get("/robot/{robot_id}/delivery", response_model=list[DeliveryRobotView])
+# Response from endpoint can be either view depending on query
+def robot_deliveries_endpoint(robot_id: int): 
+    return get_ready_deliveries_for_robot(robot_id=robot_id)
 
 # GET robot's door command at /robot/{robot_id}/door
 @router.get("/robot/{robot_id}/door")
@@ -73,12 +81,19 @@ def update_next_room_endpoint(robot_id: int, update: RobotNextRoomUpdate):
 
     return update_robot_next_room(robot_id = robot_id, next_room = update.next_room)
 
+# PATCH delivery status with robot at /robot/{robot_id}/delivery (Used by robot)
+@router.patch("/robot/{robot_id}/delivery")
+def robot_update_delivery_endpoint(robot_id: int, delivery_id: int, status: str): 
+
+    return robot_update_delivery_status(robot_id=robot_id, delivery_id = delivery_id, status = status)
+
+# Probably don't need the robot to update door_status if backend does it and the robot reads from it
+# Only to be used if robot manually locks itself 
 # PATCH unlock robot door command at /robot/{robot_id}/door (Used by user)
 @router.patch("/robot/{robot_id}/door/unlock")
-def unlock_robot_door_endpoint(robot_id: int, delivery_id: int, recipient_id: int, pin: str): 
+def unlock_robot_door_endpoint(robot_id: int): 
 
-    if pin == get_delivery_pin(r_id= recipient_id, d_id= delivery_id):
-        update_robot_door_status(robot_id=robot_id, door_status="open")
+    update_robot_door_status(robot_id=robot_id, door_status="open")
         
     return get_robot_door_status(robot_id=robot_id)
 

@@ -1,5 +1,6 @@
 import streamlit as st
 import app_bootstrap
+from user.global_delivery_modal import render_global_delivery_modals
 
 st.set_page_config(
     page_title="Mail Delivery Robot Demo",
@@ -75,4 +76,5 @@ else:
         position="hidden"
     )
 
+render_global_delivery_modals()
 pg.run()

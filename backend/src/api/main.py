@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, Header, HTTPException
 from fastapi.responses import JSONResponse
 from api.routers.robot_api import router as robot_router
+from api.routers.admin_api import router as admin_router
 from services.delivery_admin_service import check_late_deliveries
 from contextlib import asynccontextmanager
 
@@ -49,6 +50,7 @@ def health():
     return {"status": "running"}
 
 app.include_router(robot_router, prefix = "/robot")
+app.include_router(admin_router, prefix = "/admin")
 
 # Handles LookupErrors: single-record queries that return no data
 @app.exception_handler(LookupError)

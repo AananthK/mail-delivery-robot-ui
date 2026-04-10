@@ -103,6 +103,47 @@ def get_deliveries_by_room_for_recipient_dao(recipient_id: int, room_number: str
 
     return record
 
+# recipient persistence functions to get ready deliveries
+def get_ready_deliveries_for_recipient_dao(recipient_id: int):
+    sql = "SELECT * FROM delivery " \
+            "WHERE recipient_user_id = %s " \
+            "AND delivery_time :: DATE = CURRENT_DATE " \
+            "AND status = %s " \
+            "ORDER BY delivery_time DESC"
+
+    with get_connection() as conn:
+        with conn.cursor() as cur: 
+            cur.execute(sql, (recipient_id, "ready"))
+            record = cur.fetchall()
+
+    return record
+
+# recipient persistence functions to get unloading delivery
+def get_unloadling_delivery_for_recipient_dao(recipient_id: int):
+    sql = "SELECT * FROM delivery " \
+            "WHERE recipient_user_id = %s " \
+            "AND status = %s " \
+            "AND recipient_confirmed = %s " \
+            "ORDER BY delivery_time DESC"
+
+    with get_connection() as conn:
+        with conn.cursor() as cur: 
+            cur.execute(sql, (recipient_id, "unloading", True))
+            record = cur.fetchone()
+
+    return record
+
+# recipient persistence function get confirmation of recipient presence
+def get_recipient_confirmed_status_dao(delivery_id: int, recipient_id: int):
+    sql = "SELECT recipient_confirmed FROM delivery WHERE delivery_id = %s AND recipient_user_id = %s "
+
+    with get_connection() as conn:
+        with conn.cursor() as cur: 
+            cur.execute(sql, (delivery_id, recipient_id))
+            record = cur.fetchone()
+
+    return record
+
 # recipient persistence function to get delivery PIN
 def get_delivery_pin_dao(recipient_id: int, delivery_id: int):
     sql = "SELECT pin FROM delivery WHERE delivery_id = %s AND recipient_user_id = %s "
@@ -151,5 +192,19 @@ def update_delivery_by_recipient_dao(recipient_id: int,
             cur.execute(sql, tuple(values))
             record = cur.fetchone()
         conn.commit()
+
+    return record
+
+# recipient persistence function update confirmation of recipient presence
+def update_recipient_confirmed_status_dao(delivery_id: int, recipient_id: int, confirmed: bool):
+    sql = "UPDATE delivery SET recipient_confirmed = %s " \
+    "WHERE delivery_id = %s " \
+    "AND recipient_user_id = %s " \
+    "RETURNING delivery_id, recipient_confirmed"
+
+    with get_connection() as conn:
+        with conn.cursor() as cur: 
+            cur.execute(sql, (confirmed, delivery_id, recipient_id))
+            record = cur.fetchone()
 
     return record

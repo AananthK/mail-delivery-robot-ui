@@ -7,6 +7,7 @@ from models.delivery import DeliveryUpdateView, DeliveryQuickView, DeliveryFullV
 from persistence.delivery_recipient_dao import *
 from persistence.delivery_general_dao import update_delivery_status_dao
 from services.room_service import find_room
+from services.robot_service import update_robot_door_status, get_robot_by_id, find_robot
 from datetime import datetime
 from .utils import db_return, dict_list_to_model_list
 
@@ -70,6 +71,29 @@ def get_deliveries_by_room_for_recipient(m_type: str, r_id: int, room: str):
     dlist = get_deliveries_by_room_for_recipient_dao(recipient_id = r_id, room_number=room)
     deliveries = dict_list_to_model_list(model_type = m_type, d_list = dlist)
     return deliveries
+
+def get_ready_deliveries_for_recipient(r_id: int):
+    dlist = get_ready_deliveries_for_recipient_dao(recipient_id = r_id)
+    deliveries = dict_list_to_model_list(model_type = "full_view", d_list = dlist)
+    return deliveries
+
+def get_unloading_delivery_for_recipient(r_id: int):
+    d_record = get_unloadling_delivery_for_recipient_dao(recipient_id=r_id)
+    
+    if d_record is None:
+        return None
+
+    delivery = DeliveryFullView(delivery_id = d_record['delivery_id'], 
+                                    status = d_record['status'],
+                                    admin_user_id = d_record['admin_user_id'],
+                                    sender_name = d_record['sender_name'],
+                                    recipient_id = d_record['recipient_user_id'],
+                                    assigned_robot = d_record['assigned_robot'],
+                                    room_number = d_record['room_number'],
+                                    delivery_time = d_record['delivery_time'],
+                                    created_at = d_record['created_at'], 
+                                    last_updated_at= d_record['last_updated_at'])
+    return delivery
 
 def get_delivery_pin(r_id: int, d_id: int):
     # check if delivery exists
@@ -163,14 +187,105 @@ def change_delivery_time_recipient(r_id: int, d_id: int, time: datetime):
     dView = update_delivery_by_recipient(r_id = r_id, d_id = d_id, u_time = time)
     return dView
 
+def confirm_presence(r_id: int, d_id: int):
+    # confirm delivery exists
+    d = db_return(get_delivery_by_id_for_recipient_dao(recipient_id=r_id, delivery_id=d_id))
+
+    # confirm delivery status is ready to confirm presence for
+    if d['status'] != "ready":
+        raise ValueError("Delivery not ready today. Try again later.")
+    
+    delivery = update_recipient_confirmed_status_dao(delivery_id=d_id, recipient_id= r_id, confirmed=True)
+    return delivery
+
+#---- Robot Interaction (During delivery) ----
+
+def unload_mail_recipient(d_id: int, r_id: int, pin: str):
+
+    # confirm delivery exists
+    d = db_return(get_delivery_by_id_for_recipient_dao(recipient_id=r_id, delivery_id=d_id))
+
+    # confirm delivery status is unloading (delivery has reached recipient's room)
+    if d['status'] != "unloading":
+        raise ValueError("Delivery has not arrived yet. Cannot unload.")
+    
+    # confirm recipient is available to unload delivery
+    if not d['recipient_confirmed']:
+        raise ValueError("Recipient not available. Cannot unload.")
+
+    # confirm delivery robot exists
+    r = find_robot((d['assigned_robot']))
+    # confirm robot is idle (stopped infront of door)
+    if r['robot_status'] != "idle":
+        raise ValueError("Robot is not idle. Delivery cannot be accepted.")
+
+    d_pin = get_delivery_pin(r_id= d['recipient_user_id'], d_id=d['delivery_id'])
+
+    if pin == d_pin: # recipient enters correct pin
+        # mark robot door as open
+        # robot reads door_status API and opens door
+        # assume robot door is always closed 
+        update_robot_door_status(robot_id = d['assigned_robot'], door_status = 'open')
+    else:
+        raise ValueError("Pin is incorrect. Please try again.")
+    
+    return {"message": "door opened successfully!"}
+
+# service function for admin to accept delivery
+def accept_delivery_recipient(r_id: int, d_id: int):
+
+    # confirm delivery exists
+    d = db_return(get_delivery_by_id_for_recipient_dao(recipient_id=r_id, delivery_id=d_id))
+
+    # confirm delivery status is unloading (delivery has reached recipient's room)
+    if d['status'] != "unloading":
+        raise ValueError("Delivery has not arrived yet. Cannot unload.")
+
+    # confirm recipient is available to accept delivery
+    if not d['recipient_confirmed']:
+        raise ValueError("Recipient not available. Delivery not accepted.")
+
+    # confirm delivery robot exists
+    r = find_robot((d['assigned_robot']))
+    # confirm robot is idle (stopped infront of door)
+    if r['robot_status'] != "idle":
+        raise ValueError("Robot is not idle. Delivery cannot be accepted.")
+
+    # mark delivery as complete
+    updated_delivery = update_delivery_status_dao(delivery_id = d['delivery_id'], status = "complete")
+    # close robot door
+    update_robot_door_status(robot_id = d['assigned_robot'], door_status = 'close')
+
+    dView = DeliveryUpdateView(delivery_id = updated_delivery['delivery_id'], 
+                               admin_id = updated_delivery['admin_user_id'], 
+                               status = updated_delivery['status'], 
+                               room_number = updated_delivery['room_number'],
+                               delivery_time = updated_delivery['delivery_time'],
+                               created_at = updated_delivery['created_at'], 
+                               last_updated_at = updated_delivery['last_updated_at'],
+                               completed_at = updated_delivery['last_updated_at'],
+                               deleted_at = None)
+    
+    return dView
+
 # service function when a recipient denies a delivery
-def deny_delivery_recipient(r_id: int, d_id):
+def deny_delivery_recipient(r_id: int, d_id: int):
 
     # ensure delivery exists
-    delivery = db_return(get_delivery_by_id_for_recipient(r_id = r_id, d_id = d_id))
+    delivery = db_return(get_delivery_by_id_for_recipient_dao(recipient_id=r_id, delivery_id=d_id))
 
-    d_time = delivery['delivery_time']
-    d_status = delivery['status']
+    d_time = delivery["delivery_time"]
+    d_status = delivery["status"]
+
+    # only allow denial while delivery is active
+    if d_status not in {"ready", "in_progress", "unloading"}:
+        raise ValueError("Delivery can only be denied while it is ready, in-progress or unloading.")
+    
+    # confirm delivery robot exists
+    r = find_robot((delivery['assigned_robot']))
+    # confirm robot is idle (stopped infront of door)
+    if r['robot_status'] == "moving":
+        raise ValueError("Robot is not in operation. Delivery cannot be denied.")
 
     # ensure correct timezone
     if d_time.tzinfo is None:
@@ -178,23 +293,25 @@ def deny_delivery_recipient(r_id: int, d_id):
     else:
         d_time = d_time.astimezone(TORONTO)
 
-    next_day =  d_time + timedelta(days = 1)
+    next_day = d_time + timedelta(days=1)
 
-    # recipient can only deny a delivery in progress, otherwise update delivery time
-    while d_status == "in_progress":
+    while True:
         try:
-            # Set delivery time to next day (closest future day, same time, with no conflicts)
-            delivery = change_delivery_time_recipient(r_id = r_id, d_id = d_id, time = next_day)
+            # move delivery to next valid same-time slot
+            change_delivery_time_recipient(
+                r_id=r_id,
+                d_id=d_id,
+                time=next_day
+            )
 
-            # also set delivery status to ready
-            update_delivery_status_dao("ready")
+            # reset status for future delivery attempt
+            update_delivery_status_dao(delivery_id=d_id, status="ready")
+            update_recipient_confirmed_status_dao(delivery_id=d_id, recipient_id=r_id,confirmed=False)
+
+            return get_delivery_by_id_for_recipient(m_type="full_view", r_id=r_id, d_id=d_id)
+
         except ValueError as e:
-
-            # catch potential delivery conflicts
             if str(e) == "Time slot contains a delivery. Please select another":
-                # increase future date by a day
-                next_day += timedelta(days = 1)
+                next_day += timedelta(days=1)
             else:
                 raise
-
-    return delivery

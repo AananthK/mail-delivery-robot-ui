@@ -41,9 +41,12 @@ def create_delivery(a_id: int,
     # initial delivery status is determined by whether a robot is assigned to delivery or not
     if robot is not None:
         # verify robot exists
-        find_robot(robot_id = robot)
+        r = find_robot(robot_id = robot)
         
-        status='ready'
+        if r['robot_status'] == "off" or r['robot_status'] == "charging":
+            status ='ready'
+        else:
+            raise ValueError("Robot is busy. Select another Robot.")
     else:
         status='no_robot'
 
@@ -240,8 +243,12 @@ def update_delivery_robot(a_id: int, d_id: int, r_id: int):
         raise LookupError("Delivery does not exist")
     
     # ensure robot exists
-    find_robot(robot_id = r_id)
+    r = find_robot(robot_id = r_id)
     
+    # ensure robot is not busy
+    if r['robot_status'] != "off" and r['robot_status'] != "charging":
+        raise ValueError("Robot is busy. Select another Robot.")
+
     if delivery:
 
         modifiable_status = ["no_robot", "ready", "error"]
@@ -291,7 +298,7 @@ def check_late_deliveries():
 
         elif due_time < current_time and d['status'] not in acceptable_states:
             # update the database
-            update_delivery_status_dao(d_id= d['delivery_id'], status = 'late')
+            update_delivery_status_dao(delivery_id= d['delivery_id'], status = 'late')
             # update for viewing
             d['status'] = 'late'
             late_deliveries.append(d)

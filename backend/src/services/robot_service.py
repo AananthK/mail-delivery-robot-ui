@@ -2,6 +2,7 @@
 # These functions also convert lists into Pydantic models for API
 
 from models.robot import *
+from models.delivery import DeliveryRobotView
 from persistence.robot_dao import *
 from persistence.room_dao import get_room_by_number_dao
 from persistence.delivery_general_dao import get_all_deliveries_by_robot_dao

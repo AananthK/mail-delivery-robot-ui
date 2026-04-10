@@ -1,7 +1,7 @@
 import streamlit as st
 import app_bootstrap
 
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta
 
 from backend.src.services.admin_service import admin_create_delivery
 
@@ -16,13 +16,30 @@ st.title("📨 Create Deliveryy")
 admin_id = st.session_state.get("user_id")
 st.caption(f"Admin ID: {admin_id}")
 
+# Set defaults only once
+if "create_delivery_date" not in st.session_state:
+    st.session_state.create_delivery_date = date.today()
+
+if "create_delivery_time" not in st.session_state:
+    # Better default: at least 1 hour from now
+    default_dt = datetime.now() + timedelta(hours=1)
+    st.session_state.create_delivery_time = default_dt.time().replace(second=0, microsecond=0)
+
 with st.form("create_delivery_form"):
     recipient_id = st.number_input("Recipient ID", min_value=1, step=1)
     room_number = st.text_input("Room Number")
 
     # Delivery time picker (date + time -> datetime)
-    d_date = st.date_input("Delivery Date", value=date.today())
-    d_time = st.time_input("Delivery Time", value=datetime.now().time().replace(second=0, microsecond=0))
+    d_date = st.date_input(
+        "Delivery Date",
+        key="create_delivery_date"
+    )
+
+    d_time = st.time_input(
+        "Delivery Time",
+        key="create_delivery_time"
+    )
+
     delivery_time = datetime.combine(d_date, d_time)
 
     st.subheader("Sender Information")

@@ -128,6 +128,18 @@ def user_view_deliveries_by_room(user_id: int, room: str, m_type: Literal['quick
     
     return get_deliveries_by_room_for_recipient(m_type = m_type, r_id= user_id, room = room)
 
+def user_view_ready_deliveries(user_id: int):
+    if not user_exists(user_id):
+        raise PermissionError("Only authorized persons can view their deliveries")
+    
+    return get_ready_deliveries_for_recipient(r_id=user_id)
+
+def user_view_unloading_delivery(user_id: int):
+    if not user_exists(user_id):
+        raise PermissionError("Only authorized persons can view their deliveries")
+    
+    return get_unloading_delivery_for_recipient(r_id = user_id)
+
 # user to get delivery pin
 def user_get_delivery_pin(user_id: int, delivery_id: int):
 
@@ -153,6 +165,27 @@ def user_change_delivery_time(user_id: int, d_id: int, time: datetime):
         raise PermissionError("Only Admin/User can change delivery times")
     
     return change_delivery_time_recipient(r_id = user_id, d_id = d_id, time = time)
+
+# user to confirm their presence for a delivery
+def user_confirm_presence(user_id: int, d_id: int):
+    if not user_exists(user_id):
+        raise PermissionError("Only User can change confirmation for delivery pick-up")
+    
+    return confirm_presence(r_id = user_id, d_id = d_id)
+
+# user to unload delivery door with pin
+def user_unload_delivery(user_id: int, d_id: int, pin: str):
+    if not user_exists(user_id):
+        raise PermissionError("Only User can unload a delivery")
+    
+    return unload_mail_recipient(r_id = user_id, d_id = d_id, pin = pin)
+
+# user to accepts their delivery (confirm the delivery has been accepted)
+def user_accept_delivery(user_id: int, d_id: int):
+    if not user_exists(user_id):
+        raise PermissionError("Only User can accept a delivery")
+    
+    return accept_delivery_recipient(r_id = user_id, d_id = d_id)
 
 # user to deny a delivery
 def user_deny_delivery(user_id: int, d_id: int):

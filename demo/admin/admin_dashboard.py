@@ -60,6 +60,7 @@ st.divider()
 
 if st.button("🚪 Logout"):
     keys_to_clear = [
+        # login/session keys
         "is_logged_in",
         "user_id",
         "role",
@@ -68,7 +69,20 @@ if st.button("🚪 Logout"):
         "username",
         "email",
         "phone_number",
+
+        # modal keys
+        "show_presence_modal",
+        "presence_deliveries",
+        "presence_handled_delivery_ids",
+        "show_pickup_modal",
+        "pickup_step",
+        "pickup_delivery",
+        "pickup_robot_id",
+        "pickup_pin_input",
+        "pickup_modal_handled_delivery_id",
+        "active_delivery_id",
     ]
+
     for key in keys_to_clear:
         st.session_state.pop(key, None)
 

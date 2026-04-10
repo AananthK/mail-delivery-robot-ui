@@ -155,7 +155,7 @@ def get_deliveries_by_room_for_admin_dao(admin_id: int, room_number: str):
     return record
 
 # admin persistence function to get deliveries ready to be delivered today
-def get_ready_deliveries_dao(admin_id: int):
+def get_ready_deliveries_for_admin_dao(admin_id: int):
     sql = "SELECT * FROM delivery " \
             "WHERE admin_user_id = %s " \
             "AND delivery_time :: DATE = CURRENT_DATE " \
